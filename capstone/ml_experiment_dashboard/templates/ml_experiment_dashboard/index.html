@@ -1,7 +1,6 @@
 {% extends "ml_experiment_dashboard/layout.html" %}
 
 {% block body %}
-    <h2>{{ user.first_name }} {{ user.last_name }}</h2>
     {% if user.is_authenticated %}
         <!--Only authenticated users can upload the dataset-->
         {% if message %}
@@ -19,6 +18,12 @@
             <h3>Experiment Details</h3>
             <p><strong>Name:</strong> {{ experiment.name }}</p>
             <p><strong>Row Count:</strong> {{ experiment.row_count }}</p>
+            {% if experiment.commentary %}
+                <h4>AI Commentary</h4>
+                <!--Show/Hide the commentary-->
+                <button id="toggle-commentary">Show</button>
+                <p id="commentary-content" class="hidden">{{ experiment.commentary|linebreaksbr }}</p>
+            {% endif %}
             <h4>Preview of First 5 Rows</h4>
             <div class="table-responsive">
                 <table class="table">
@@ -40,10 +45,6 @@
                     </tbody>
                 </table>
             </div>
-            {% if experiment.commentary %}
-                <h4>AI Commentary</h4>
-                <p>{{ experiment.commentary|linebreaksbr }}</p>
-            {% endif %}
         {% endif %}
     {% else %}
         <p>Please log in or register to upload a dataset.</p>

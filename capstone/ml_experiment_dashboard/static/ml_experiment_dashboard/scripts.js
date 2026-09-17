@@ -37,4 +37,16 @@ document.addEventListener("DOMContentLoaded", () => {
             showSelectedFileName();
         }
     });
+
+    // Show or hide the AI commentary
+    const toggleCommentaryButton = document.getElementById("toggle-commentary");
+    const commentaryContent = document.getElementById("commentary-content");
+    if (toggleCommentaryButton && commentaryContent) {
+        toggleCommentaryButton.addEventListener("click", () => {
+            commentaryContent.classList.toggle("hidden");
+            toggleCommentaryButton.textContent = commentaryContent.classList.contains("hidden")
+                ? "Show"
+                : "Hide";
+        });
+    }
 });

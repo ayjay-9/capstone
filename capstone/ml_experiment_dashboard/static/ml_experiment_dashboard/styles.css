@@ -22,3 +22,7 @@
 .drop-zone-input {
     display: none;
 }
+
+.hidden {
+    display: none;
+}

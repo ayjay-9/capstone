@@ -124,6 +124,7 @@ class IndexViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "The uploaded CSV file must contain at least 5 rows of data.")
 
+    # Simulate a successful CSV upload and check that the Experiment is saved in the database to rreduce the calls to the API 
     @patch("ml_experiment_dashboard.views.generate_dataset_commentary")
     def test_csv_upload_with_valid_data_saves_experiment(self, mock_commentary):
         mock_commentary.return_value = "This dataset contains laptop specs and prices."
