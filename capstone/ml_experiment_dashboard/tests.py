@@ -67,3 +67,11 @@ class LoginLogoutTests(TestCase):
         self.client.force_login(self.user)
         response = self.client.get(reverse("logout"))
         self.assertRedirects(response, reverse("login"))
+
+class IndexViewTests(TestCase):
+    def test_index_page_upload_renders_for_logged_in_user(self):
+        user = User.objects.create_user(username="bob", password="testpass123")
+        self.client.force_login(user)
+        response = self.client.get(reverse("index"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Upload Dataset (CSV):") 
