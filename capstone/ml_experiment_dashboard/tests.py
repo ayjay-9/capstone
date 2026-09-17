@@ -69,7 +69,12 @@ class LoginLogoutTests(TestCase):
         self.assertRedirects(response, reverse("login"))
 
 class IndexViewTests(TestCase):
-    def test_index_page_upload_renders_for_logged_in_user(self):
+    def test_logged_out_users_cannot_upload_data(self):
+        response = self.client.get(reverse("index"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Please log in or register to upload a dataset.")
+
+    def test_logged_in_user_can_upload_data(self):
         user = User.objects.create_user(username="bob", password="testpass123")
         self.client.force_login(user)
         response = self.client.get(reverse("index"))
