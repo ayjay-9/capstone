@@ -80,7 +80,7 @@ class IndexViewTests(TestCase):
         self.client.force_login(user)
         response = self.client.get(reverse("index"))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Upload Dataset (CSV):") 
+        self.assertContains(response, "Drag &amp; drop a CSV here, or click to browse")
 
     def test_logged_in_user_uploads_non_csv_file(self):
         user = User.objects.create_user(username="dave", password="testpass123")

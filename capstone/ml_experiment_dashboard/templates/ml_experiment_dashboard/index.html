@@ -9,8 +9,10 @@
         {% endif %}
         <form action="{% url 'index' %}" method="post" enctype="multipart/form-data">
             {% csrf_token %}
-            <label for="dataset">Upload Dataset (CSV):</label>
-            <input type="file" name="dataset" id="dataset" accept=".csv">
+            <label for="dataset" class="drop-zone" id="drop-zone">
+                <span id="drop-zone-text">Drag &amp; drop a CSV here, or click to browse</span>
+                <input type="file" name="dataset" id="dataset" accept=".csv" class="drop-zone-input">
+            </label>
             <input type="submit" id="upload-data-set" value="Upload">
         </form>
     {% else %}
