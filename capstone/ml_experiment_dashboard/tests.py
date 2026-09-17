@@ -108,4 +108,18 @@ class IndexViewTests(TestCase):
                 format="multipart",
             )
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Successfully uploaded empty.txt.")
+        self.assertContains(response, "Please upload a CSV file.")
+
+    def test_csv_upload_contains_headers_for_data_frames(self):
+        user = User.objects.create_user(username="eve", password="testpass123")
+        self.client.force_login(user)
+        CSV_PATH = os.path.join(os.path.dirname(__file__), "csv_with_headers.csv")
+        with open(CSV_PATH, "rb") as csv_file:
+            response = self.client.post(
+                reverse("index"),
+                {"dataset": csv_file},
+                format="multipart",
+            )
+        self.assertEqual(response.status_code, 200)
+        # I need to be able to see the columns of the uploaded CSV file in the response.
+        self.assertContains(response, "Columns: brand, price, ram") 
