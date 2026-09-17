@@ -82,20 +82,6 @@ class IndexViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Upload Dataset (CSV):") 
 
-    def test_logged_in_user_can_submit_dataset(self):
-        user = User.objects.create_user(username="charlie", password="testpass123")
-        self.client.force_login(user)
-        # Simulate file upload
-        CSV_PATH = os.path.join(os.path.dirname(__file__), "empty.csv")
-        with open(CSV_PATH, "rb") as csv_file:
-            response = self.client.post(
-                reverse("index"),
-                {"dataset": csv_file},
-                format="multipart",
-            )
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Successfully uploaded empty.csv.")
-
     def test_logged_in_user_uploads_non_csv_file(self):
         user = User.objects.create_user(username="dave", password="testpass123")
         self.client.force_login(user)
@@ -110,8 +96,22 @@ class IndexViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Please upload a CSV file.")
 
-    def test_csv_upload_contains_headers_for_data_frames(self):
-        user = User.objects.create_user(username="eve", password="testpass123")
+    def test_upload_with_no_data(self):
+        user = User.objects.create_user(username="charlie", password="testpass123")
+        self.client.force_login(user)
+        # Simulate file upload
+        CSV_PATH = os.path.join(os.path.dirname(__file__), "empty.csv")
+        with open(CSV_PATH, "rb") as csv_file:
+            response = self.client.post(
+                reverse("index"),
+                {"dataset": csv_file},
+                format="multipart",
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "The uploaded CSV file should not be empty and must contain valid data headers.")
+
+    def test_csv_upload_with_fewer_than_five_rows_is_rejected(self):
+        user = User.objects.create_user(username="frank", password="testpass123")
         self.client.force_login(user)
         CSV_PATH = os.path.join(os.path.dirname(__file__), "csv_with_headers.csv")
         with open(CSV_PATH, "rb") as csv_file:
@@ -121,5 +121,4 @@ class IndexViewTests(TestCase):
                 format="multipart",
             )
         self.assertEqual(response.status_code, 200)
-        # I need to be able to see the columns of the uploaded CSV file in the response.
-        self.assertContains(response, "Columns: brand, price, ram") 
+        self.assertContains(response, "The uploaded CSV file must contain at least 5 rows of data.")
