@@ -1,3 +1,4 @@
+import json
 import pandas as pd
 from pathlib import PurePosixPath as UploadPath
 from django.http import HttpResponseRedirect
@@ -37,9 +38,20 @@ def index(request):
                     "message": "The uploaded CSV file must contain at least 5 rows of data."
                 })
 
+            # Create the Experiment model
+            experiment = Experiment(
+                user=request.user,
+                name=uploaded_file.name,
+                description="Uploaded dataset",
+                columns=df.columns.tolist(),
+                row_count=len(df),
+                preview_rows=json.loads(df.head().to_json(orient="records")),
+            )
+            experiment.save()
 
             return render(request, "ml_experiment_dashboard/index.html", {
                 "message": f"Successfully uploaded {uploaded_file.name}.",
+                "experiment": experiment
             })
     else:
         return render(request, "ml_experiment_dashboard/index.html")

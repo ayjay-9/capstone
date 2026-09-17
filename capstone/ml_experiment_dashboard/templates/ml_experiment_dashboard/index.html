@@ -15,6 +15,32 @@
             </label>
             <input type="submit" id="upload-data-set" value="Upload">
         </form>
+        {% if experiment %}
+            <h3>Experiment Details</h3>
+            <p><strong>Name:</strong> {{ experiment.name }}</p>
+            <p><strong>Row Count:</strong> {{ experiment.row_count }}</p>
+            <h4>Preview of First 5 Rows</h4>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            {% for column in experiment.columns %}
+                                <th>{{ column }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in experiment.preview_rows %}
+                            <tr>
+                                {% for value in row.values %}
+                                    <td>{{ value }}</td>
+                                {% endfor %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
     {% else %}
         <p>Please log in or register to upload a dataset.</p>
     {% endif %}
