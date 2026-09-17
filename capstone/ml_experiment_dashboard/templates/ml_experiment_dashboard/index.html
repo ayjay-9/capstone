@@ -40,6 +40,10 @@
                     </tbody>
                 </table>
             </div>
+            {% if experiment.commentary %}
+                <h4>AI Commentary</h4>
+                <p>{{ experiment.commentary|linebreaksbr }}</p>
+            {% endif %}
         {% endif %}
     {% else %}
         <p>Please log in or register to upload a dataset.</p>

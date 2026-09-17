@@ -9,6 +9,7 @@ from django.db import IntegrityError
 
 
 from .models import User, Experiment, ExperimentResult
+from .dataset_commentary import generate_dataset_commentary
 
 def index(request):
     if request.method == "POST":
@@ -38,6 +39,12 @@ def index(request):
                     "message": "The uploaded CSV file must contain at least 5 rows of data."
                 })
 
+            try:
+                commentary = generate_dataset_commentary(df)
+            except Exception as e:
+                print(f"generate_dataset_commentary failed: {e!r}")
+                commentary = "Commentary unavailable."
+
             # Create the Experiment model
             experiment = Experiment(
                 user=request.user,
@@ -46,6 +53,7 @@ def index(request):
                 columns=df.columns.tolist(),
                 row_count=len(df),
                 preview_rows=json.loads(df.head().to_json(orient="records")),
+                commentary=commentary,
             )
             experiment.save()
 
