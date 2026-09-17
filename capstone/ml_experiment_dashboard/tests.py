@@ -1,3 +1,4 @@
+import os
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
@@ -80,3 +81,17 @@ class IndexViewTests(TestCase):
         response = self.client.get(reverse("index"))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Upload Dataset (CSV):") 
+
+    def test_logged_in_user_can_submit_dataset(self):
+        user = User.objects.create_user(username="charlie", password="testpass123")
+        self.client.force_login(user)
+        # Simulate file upload
+        CSV_PATH = os.path.join(os.path.dirname(__file__), "laptops.csv")
+        with open(CSV_PATH, "rb") as csv_file:
+            response = self.client.post(
+                reverse("index"),
+                {"dataset": csv_file},
+                format="multipart",
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Successfully uploaded laptops.csv.")
