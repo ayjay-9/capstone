@@ -86,7 +86,7 @@ class IndexViewTests(TestCase):
         user = User.objects.create_user(username="charlie", password="testpass123")
         self.client.force_login(user)
         # Simulate file upload
-        CSV_PATH = os.path.join(os.path.dirname(__file__), "laptops.csv")
+        CSV_PATH = os.path.join(os.path.dirname(__file__), "seed.csv")
         with open(CSV_PATH, "rb") as csv_file:
             response = self.client.post(
                 reverse("index"),
@@ -94,4 +94,18 @@ class IndexViewTests(TestCase):
                 format="multipart",
             )
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Successfully uploaded laptops.csv.")
+        self.assertContains(response, "Successfully uploaded seed.csv.")
+
+    def test_logged_in_user_uploads_non_csv_file(self):
+        user = User.objects.create_user(username="dave", password="testpass123")
+        self.client.force_login(user)
+        # Simulate file upload with a non-CSV file
+        TXT_PATH = os.path.join(os.path.dirname(__file__), "seed.txt")
+        with open(TXT_PATH, "rb") as txt_file:
+            response = self.client.post(
+                reverse("index"),
+                {"dataset": txt_file},
+                format="multipart",
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Successfully uploaded seed.txt.")
