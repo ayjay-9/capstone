@@ -63,4 +63,4 @@ def login(request):
 
 def logout(request):
     django_logout(request)
-    return HttpResponseRedirect(reverse("index"))
+    return HttpResponseRedirect(reverse("login"))
