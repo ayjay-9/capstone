@@ -1,4 +1,5 @@
 import os
+from unittest.mock import patch
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
@@ -86,7 +87,7 @@ class IndexViewTests(TestCase):
         user = User.objects.create_user(username="dave", password="testpass123")
         self.client.force_login(user)
         # Simulate file upload with a non-CSV file
-        TXT_PATH = os.path.join(os.path.dirname(__file__), "empty.txt")
+        TXT_PATH = os.path.join(os.path.dirname(__file__), "test_files/empty.txt")
         with open(TXT_PATH, "rb") as txt_file:
             response = self.client.post(
                 reverse("index"),
@@ -100,7 +101,7 @@ class IndexViewTests(TestCase):
         user = User.objects.create_user(username="charlie", password="testpass123")
         self.client.force_login(user)
         # Simulate file upload
-        CSV_PATH = os.path.join(os.path.dirname(__file__), "empty.csv")
+        CSV_PATH = os.path.join(os.path.dirname(__file__), "test_files/empty.csv")
         with open(CSV_PATH, "rb") as csv_file:
             response = self.client.post(
                 reverse("index"),
@@ -113,7 +114,7 @@ class IndexViewTests(TestCase):
     def test_csv_upload_with_fewer_than_five_rows_is_rejected(self):
         user = User.objects.create_user(username="frank", password="testpass123")
         self.client.force_login(user)
-        CSV_PATH = os.path.join(os.path.dirname(__file__), "csv_with_headers.csv")
+        CSV_PATH = os.path.join(os.path.dirname(__file__), "test_files/csv_with_headers.csv")
         with open(CSV_PATH, "rb") as csv_file:
             response = self.client.post(
                 reverse("index"),
@@ -122,3 +123,25 @@ class IndexViewTests(TestCase):
             )
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "The uploaded CSV file must contain at least 5 rows of data.")
+
+    @patch("ml_experiment_dashboard.views.generate_dataset_commentary")
+    def test_csv_upload_with_valid_data_saves_experiment(self, mock_commentary):
+        mock_commentary.return_value = "This dataset contains laptop specs and prices."
+        user = User.objects.create_user(username="eve", password="testpass123")
+        self.client.force_login(user)
+        CSV_PATH = os.path.join(os.path.dirname(__file__), "test_files/valid_dataset.csv")
+        with open(CSV_PATH, "rb") as csv_file:
+            response = self.client.post(
+                reverse("index"),
+                {"dataset": csv_file},
+                format="multipart",
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Successfully uploaded valid_dataset.csv.")
+        mock_commentary.assert_called_once()
+        # Check that the Experiment was created in the database
+        from .models import Experiment
+        experiment = Experiment.objects.filter(user=user, name="valid_dataset.csv").first()
+        self.assertIsNotNone(experiment)
+        self.assertEqual(experiment.row_count, 10)  # Assuming valid_dataset.csv has 10 rows
+        self.assertEqual(experiment.commentary, "This dataset contains laptop specs and prices.")
