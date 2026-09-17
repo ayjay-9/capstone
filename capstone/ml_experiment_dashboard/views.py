@@ -1,3 +1,5 @@
+import pandas as pd
+from pathlib import PurePosixPath as UploadPath
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
@@ -8,7 +10,39 @@ from django.db import IntegrityError
 from .models import User, Experiment, ExperimentResult
 
 def index(request):
-    return render(request, 'ml_experiment_dashboard/index.html')
+    if request.method == "POST":
+            uploaded_file = request.FILES["dataset"]
+            if not UploadPath(uploaded_file.name).suffix == ".csv":
+                return render(request, "ml_experiment_dashboard/index.html", {
+                    "message": "Please upload a CSV file."
+                })
+            
+            # If the file is a CSV, but it doesn't have valid data headers
+            try:
+                df = pd.read_csv(uploaded_file, header=0)
+            except pd.errors.EmptyDataError:
+                return render(request, "ml_experiment_dashboard/index.html", {
+                    "message": "The uploaded CSV file should not be empty and must contain valid data headers."
+                })
+
+            if not df.columns.tolist():
+                return render(request, "ml_experiment_dashboard/index.html", {
+                    "message": "The uploaded CSV file should not be empty and must contain valid data headers."
+                })
+
+                
+            # If the file is a CSV, but it doesn't have up to 5 rows of data
+            if len(df) < 5:
+                return render(request, "ml_experiment_dashboard/index.html", {
+                    "message": "The uploaded CSV file must contain at least 5 rows of data."
+                })
+
+
+            return render(request, "ml_experiment_dashboard/index.html", {
+                "message": f"Successfully uploaded {uploaded_file.name}.",
+            })
+    else:
+        return render(request, "ml_experiment_dashboard/index.html")
 
 
 def register(request):
