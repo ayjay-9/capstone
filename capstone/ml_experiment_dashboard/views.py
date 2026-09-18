@@ -1,9 +1,11 @@
+import io
 import json
 import pandas as pd
 from pathlib import PurePosixPath as UploadPath
+from django.core.cache import cache
 from django.core.paginator import Paginator
 from django.http import HttpResponseRedirect
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 from django.contrib.auth import authenticate, login as django_login, logout as django_logout
 from django.contrib.auth.decorators import login_required
@@ -12,6 +14,7 @@ from django.db import IntegrityError
 
 from .models import User, Experiment, ExperimentResult
 from .dataset_commentary import generate_dataset_commentary
+from .model_training import train_model
 
 def index(request):
     if request.method == "POST":
@@ -59,9 +62,12 @@ def index(request):
             )
             experiment.save()
 
+            cache.set(f"dataset_{request.session.session_key}", df.to_json(orient="records"), timeout=600)
+
             return render(request, "ml_experiment_dashboard/index.html", {
                 "message": f"Successfully uploaded {uploaded_file.name}.",
-                "experiment": experiment
+                "experiment": experiment,
+                "can_run_experiment": True,
             })
     else:
         return render(request, "ml_experiment_dashboard/index.html")
@@ -92,6 +98,41 @@ def history(request):
         "experiments": serialize_history(page_obj.object_list),
     })
 
+@login_required
+def run_experiment(request, experiment_id):
+    experiment = get_object_or_404(Experiment, id=experiment_id, user=request.user)
+
+    if request.method != "POST":
+        return render(request, "ml_experiment_dashboard/run_experiment.html", {
+            "experiment": experiment,
+        })
+
+    target_column = request.POST.get("target_column")
+
+    cached_data = cache.get(f"dataset_{request.session.session_key}")
+    if cached_data is None:
+        return render(request, "ml_experiment_dashboard/run_experiment.html", {
+            "experiment": experiment,
+            "message": "Your uploaded data has expired. Please upload the dataset again to run an experiment.",
+        })
+
+    df = pd.read_json(io.StringIO(cached_data), orient="records")
+
+    try:
+        result_data = train_model(df, target_column)
+    except Exception as e:
+        print(f"train_model failed: {e!r}")
+        return render(request, "ml_experiment_dashboard/run_experiment.html", {
+            "experiment": experiment,
+            "message": "Could not run an experiment with that column. Please choose a different target column.",
+        })
+
+    ExperimentResult.objects.create(experiment=experiment, result_data=result_data)
+
+    return render(request, "ml_experiment_dashboard/run_experiment.html", {
+        "experiment": experiment,
+        "result": result_data,
+    })
 
 def register(request):
     if request.method == "POST":
