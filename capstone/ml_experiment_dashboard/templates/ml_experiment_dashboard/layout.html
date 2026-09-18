@@ -25,6 +25,11 @@
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'index' %}">Dashboard</a>
                         </li>
+                        {% if can_run_experiment %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'run_experiment' experiment.id %}">Run Experiment</a>
+                            </li>
+                        {% endif %}
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'history' %}">History</a>
                         </li>
