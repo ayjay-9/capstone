@@ -130,3 +130,5 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Gemini API key for dataset commentary (see ml_experiment_dashboard/dataset_commentary.py)
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "")
+
+LOGIN_URL = "login"

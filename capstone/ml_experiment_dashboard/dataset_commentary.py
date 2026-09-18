@@ -53,7 +53,9 @@ def generate_dataset_commentary(df):
         "2. Which column looks like the most natural prediction target for a "
         "machine learning model, and which columns could be used to predict it.\n"
         "3. Any data quality issues visible in the facts above (missing values, "
-        "duplicate rows) - if there are none, say so plainly rather than inventing any."
+        "duplicate rows) - if there are none, say so plainly rather than inventing any." 
+        "Suggest one or two simple next steps the user could take to improve the dataset "
+        "for machine learning like handling missing values or removing duplicates.\n"
     )
 
     model = ChatGoogleGenerativeAI(
