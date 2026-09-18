@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
-from ml_experiment_dashboard.models import Experiment
+from ml_experiment_dashboard.models import Experiment, ExperimentResult
 
 User = get_user_model()
 
@@ -205,3 +205,123 @@ class HistoryViewTests(TestCase):
         self.assertEqual(response_page_2.status_code, 200)
         for i in range(2, 7):
             self.assertContains(response_page_2, f"dataset_{i}.csv")
+
+class RunExperimentViewTests(TestCase):
+    def test_run_experiment_requires_login(self):
+        response = self.client.get(reverse("run_experiment", args=[1]))
+        self.assertEqual(response.status_code, 302)  # Redirect to login
+
+    def test_run_experiment_with_invalid_experiment_id(self):
+        user = User.objects.create_user(username="ian", password="testpass123")
+        self.client.force_login(user)
+        response = self.client.get(reverse("run_experiment", args=[999]))  # Non-existent ID
+        self.assertEqual(response.status_code, 404)
+
+    def test_run_experiment_get_shows_target_column_picker(self):
+        user = User.objects.create_user(username="jane", password="testpass123")
+        self.client.force_login(user)
+        experiment = Experiment.objects.create(
+            user=user,
+            name="valid_dataset.csv",
+            row_count=10,
+            columns=["brand", "price", "ram"],
+            commentary="This dataset contains laptop specs and prices."
+        )
+        response = self.client.get(reverse("run_experiment", args=[experiment.id]))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '<select name="target_column"')
+        self.assertContains(response, '<option value="price">price</option>')
+        # GET must not have side effects - no result yet, no ExperimentResult created
+        self.assertNotContains(response, "Experiment Results for valid_dataset.csv")
+        self.assertFalse(ExperimentResult.objects.filter(experiment=experiment).exists())
+
+    def test_run_experiment_rejects_another_users_experiment(self):
+        owner = User.objects.create_user(username="owner2", password="testpass123")
+        intruder = User.objects.create_user(username="intruder", password="testpass123")
+        experiment = Experiment.objects.create(user=owner, name="not_yours.csv", row_count=5)
+
+        self.client.force_login(intruder)
+        response = self.client.get(reverse("run_experiment", args=[experiment.id]))
+        self.assertEqual(response.status_code, 404)
+
+    @patch("ml_experiment_dashboard.views.generate_dataset_commentary")
+    def test_run_experiment_post_runs_regression(self, mock_commentary):
+        mock_commentary.return_value = "Test commentary."
+        user = User.objects.create_user(username="karl", password="testpass123")
+        self.client.force_login(user)
+        CSV_PATH = os.path.join(os.path.dirname(__file__), "test_files/valid_dataset.csv")
+        with open(CSV_PATH, "rb") as csv_file:
+            self.client.post(reverse("index"), {"dataset": csv_file}, format="multipart")
+        experiment = Experiment.objects.get(user=user, name="valid_dataset.csv")
+
+        response = self.client.post(
+            reverse("run_experiment", args=[experiment.id]),
+            {"target_column": "price"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Experiment Results for valid_dataset.csv")
+        self.assertContains(response, "regression")
+        self.assertContains(response, "LinearRegression")
+        result = ExperimentResult.objects.filter(experiment=experiment).first()
+        self.assertIsNotNone(result)
+        self.assertEqual(result.result_data["problem_type"], "regression")
+        self.assertEqual(result.result_data["feature_columns"], ["ram"])
+
+    @patch("ml_experiment_dashboard.views.generate_dataset_commentary")
+    def test_run_experiment_post_runs_classification(self, mock_commentary):
+        mock_commentary.return_value = "Test commentary."
+        user = User.objects.create_user(username="lena", password="testpass123")
+        self.client.force_login(user)
+        CSV_PATH = os.path.join(os.path.dirname(__file__), "test_files/valid_dataset.csv")
+        with open(CSV_PATH, "rb") as csv_file:
+            self.client.post(reverse("index"), {"dataset": csv_file}, format="multipart")
+        experiment = Experiment.objects.get(user=user, name="valid_dataset.csv")
+
+        response = self.client.post(
+            reverse("run_experiment", args=[experiment.id]),
+            {"target_column": "brand"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "classification")
+        self.assertContains(response, "LogisticRegression")
+        result = ExperimentResult.objects.filter(experiment=experiment).first()
+        self.assertIsNotNone(result)
+        self.assertEqual(result.result_data["problem_type"], "classification")
+        self.assertEqual(sorted(result.result_data["feature_columns"]), ["price", "ram"])
+
+    def test_run_experiment_post_without_cached_dataset_shows_friendly_message(self):
+        user = User.objects.create_user(username="mona", password="testpass123")
+        self.client.force_login(user)
+        experiment = Experiment.objects.create(
+            user=user, name="old.csv", row_count=5, columns=["price", "ram"]
+        )
+
+        response = self.client.post(
+            reverse("run_experiment", args=[experiment.id]),
+            {"target_column": "price"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Your uploaded data has expired.")
+        self.assertFalse(ExperimentResult.objects.filter(experiment=experiment).exists())
+
+    @patch("ml_experiment_dashboard.views.generate_dataset_commentary")
+    def test_run_experiment_post_with_invalid_target_column_shows_friendly_message(self, mock_commentary):
+        mock_commentary.return_value = "Test commentary."
+        user = User.objects.create_user(username="nate", password="testpass123")
+        self.client.force_login(user)
+        CSV_PATH = os.path.join(os.path.dirname(__file__), "test_files/valid_dataset.csv")
+        with open(CSV_PATH, "rb") as csv_file:
+            self.client.post(reverse("index"), {"dataset": csv_file}, format="multipart")
+        experiment = Experiment.objects.get(user=user, name="valid_dataset.csv")
+
+        response = self.client.post(
+            reverse("run_experiment", args=[experiment.id]),
+            {"target_column": "does_not_exist"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Could not run an experiment with that column.")
+        self.assertFalse(ExperimentResult.objects.filter(experiment=experiment).exists())
