@@ -180,3 +180,28 @@ class HistoryViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "mine.csv")
         self.assertNotContains(response, "not_mine.csv")
+
+    def test_history_pagination(self):
+        user = User.objects.create_user(username="hannah", password="testpass123")
+        self.client.force_login(user)
+        # Create 12 dummy experiments for this user
+        for i in range(12):
+            Experiment.objects.create(
+                user=user,
+                name=f"dataset_{i}.csv",
+                row_count=5,
+                commentary=f"This is dataset {i}."
+            )
+        response = self.client.get(reverse("history"))
+        self.assertEqual(response.status_code, 200)
+        # Check that only 5 experiments are shown on the first page
+        for i in range(7, 12):
+            self.assertContains(response, f"dataset_{i}.csv")
+        for i in range(0, 7):
+            self.assertNotContains(response, f"dataset_{i}.csv")
+
+        # Check the second page
+        response_page_2 = self.client.get(reverse("history") + "?page=2")
+        self.assertEqual(response_page_2.status_code, 200)
+        for i in range(2, 7):
+            self.assertContains(response_page_2, f"dataset_{i}.csv")
