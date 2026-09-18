@@ -4,6 +4,8 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
+from ml_experiment_dashboard.models import Experiment
+
 User = get_user_model()
 
 class RegisterViewTests(TestCase):
@@ -141,8 +143,40 @@ class IndexViewTests(TestCase):
         self.assertContains(response, "Successfully uploaded valid_dataset.csv.")
         mock_commentary.assert_called_once()
         # Check that the Experiment was created in the database
-        from .models import Experiment
         experiment = Experiment.objects.filter(user=user, name="valid_dataset.csv").first()
         self.assertIsNotNone(experiment)
         self.assertEqual(experiment.row_count, 10)  # Assuming valid_dataset.csv has 10 rows
         self.assertEqual(experiment.commentary, "This dataset contains laptop specs and prices.")
+
+
+class HistoryViewTests(TestCase):
+    def test_history_requires_login(self):
+        response = self.client.get(reverse("history"))
+        self.assertEqual(response.status_code, 302)
+
+    def test_user_upload_history_is_displayed(self):
+        user = User.objects.create_user(username="grace", password="testpass123")
+        self.client.force_login(user)
+        # Create a dummy experiment for this user
+        Experiment.objects.create(
+            user=user,
+            name="test_dataset.csv",
+            row_count=5,
+            commentary="This is a test dataset."
+        )
+        response = self.client.get(reverse("history"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "test_dataset.csv")
+
+    def test_history_shows_only_current_users_experiments(self):
+        owner = User.objects.create_user(username="owner", password="testpass123")
+        other = User.objects.create_user(username="other", password="testpass123")
+        Experiment.objects.create(user=owner, name="mine.csv", row_count=5)
+        Experiment.objects.create(user=other, name="not_mine.csv", row_count=5)
+
+        self.client.force_login(owner)
+        response = self.client.get(reverse("history"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "mine.csv")
+        self.assertNotContains(response, "not_mine.csv")
