@@ -1,0 +1,32 @@
+{% extends "ml_experiment_dashboard/layout.html" %}
+
+{% block body %}
+    <h1>Run Experiment</h1>
+    <p><strong>Experiment:</strong> {{ experiment.name }}</p>
+    <p><strong>Row Count:</strong> {{ experiment.row_count }}</p>
+
+    {% if message %}
+        <div>{{ message }}</div>
+    {% endif %}
+
+    {% if result %}
+        <h2>Experiment Results for {{ experiment.name }}</h2>
+        <p><strong>Problem type:</strong> {{ result.problem_type }}</p>
+        <p><strong>Model:</strong> {{ result.model }}</p>
+        <p><strong>Target column:</strong> {{ result.target_column }}</p>
+        <p><strong>Features used:</strong> {{ result.feature_columns|join:", " }}</p>
+        <p><strong>{{ result.metric_name }}:</strong> {{ result.metric_value }}</p>
+    {% endif %}
+
+    <h3>Run another experiment</h3>
+    <form action="{% url 'run_experiment' experiment.id %}" method="post">
+        {% csrf_token %}
+        <label for="target-column">Column to predict:</label>
+        <select name="target_column" id="target-column">
+            {% for column in experiment.columns %}
+                <option value="{{ column }}">{{ column }}</option>
+            {% endfor %}
+        </select>
+        <input type="submit" value="Run Experiment">
+    </form>
+{% endblock %}
