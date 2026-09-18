@@ -1,10 +1,12 @@
 import json
 import pandas as pd
 from pathlib import PurePosixPath as UploadPath
+from django.core.paginator import Paginator
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 from django.contrib.auth import authenticate, login as django_login, logout as django_logout
+from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError
 
 
@@ -63,6 +65,32 @@ def index(request):
             })
     else:
         return render(request, "ml_experiment_dashboard/index.html")
+
+
+def serialize_history(experiments):
+    return [
+        {
+            "name": experiment.name,
+            "description": experiment.description,
+            "columns": experiment.columns,
+            "row_count": experiment.row_count,
+            "preview_rows": experiment.preview_rows,
+            "commentary": experiment.commentary,
+            "created_at": experiment.created_at.isoformat(),
+        }
+        for experiment in experiments
+    ]
+
+@login_required
+def history(request):
+    experiments = Experiment.objects.filter(user=request.user).order_by("-created_at")
+    paginator = Paginator(experiments, 5)  # Show 5 experiments per page
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+    return render(request, "ml_experiment_dashboard/history.html", {
+        "page_obj": page_obj,
+        "experiments": serialize_history(page_obj.object_list),
+    })
 
 
 def register(request):
