@@ -12,15 +12,21 @@
         <!-- Babel (for JSX transpilation) -->
         <script src="https://unpkg.com/@babel/standalone@7/babel.min.js"></script>
         <script src="{% static 'ml_experiment_dashboard/scripts.js' %}"></script>
-        <link href="{% static 'ml_experiment_dashboard/styles.css' %}" rel="stylesheet">
+        <link href="{% static 'ml_experiment_dashboard/styles.css' %}" rel="stylesheet" type="text/css">
     </head>
     <body>
 
         <nav>
-            <h1>{{ user.first_name }}'s ML Experiment Dashboard</h1>
+            <h1 id="masthead">
+                {% if user.first_name %}
+                    {{ user.first_name }}'s ML Experiment Dashboard
+                {% else %}
+                    ML Experiment Dashboard
+                {% endif %}
+            </h1>
           
             <div>
-                <ul class="nav">
+                <ul class="nav" id="masthead-links">
                     {% if user.is_authenticated %}
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'index' %}">Dashboard</a>
@@ -47,6 +53,7 @@
                 </ul>
             </div>
           </nav>
+          <hr>
         
         <div class="body">
             {% block body %}

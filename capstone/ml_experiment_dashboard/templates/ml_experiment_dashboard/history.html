@@ -3,9 +3,9 @@
 {% block body %}
     <h2>Upload History</h2>
     {% if experiments %}
-        <ul>
+        <ul id="experiment-history-list">
         {% for experiment in experiments %}
-            <li>
+            <li id="experiment-history-item">
                 <strong>{{ experiment.name }}</strong> &mdash; {{ experiment.created_at }}
                 <p>{{ experiment.row_count }} rows &middot; columns: {{ experiment.columns|join:", " }}</p>
                 <p>{{ experiment.commentary }}</p>

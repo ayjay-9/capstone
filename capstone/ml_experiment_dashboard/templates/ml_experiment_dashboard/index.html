@@ -4,9 +4,9 @@
     {% if user.is_authenticated %}
         <!--Only authenticated users can upload the dataset-->
         {% if message %}
-            <div>{{ message }}</div>
+            <div id="upload-message">{{ message }}</div>
         {% endif %}
-        <form action="{% url 'index' %}" method="post" enctype="multipart/form-data">
+        <form id="upload-form" action="{% url 'index' %}" method="post" enctype="multipart/form-data">
             {% csrf_token %}
             <label for="dataset" class="drop-zone" id="drop-zone">
                 <span id="drop-zone-text">Drag &amp; drop a CSV here, or click to browse</span>
@@ -46,7 +46,7 @@
                 </table>
             </div>
             {% if can_run_experiment %}
-                <a href="{% url 'run_experiment' experiment.id %}" class="btn btn-primary">Run Experiment</a>
+                <a href="{% url 'run_experiment' experiment.id %}" class="btn btn-primary" id="run-experiment-btn">Run Experiment</a>
             {% endif %}
         {% endif %}
     {% else %}

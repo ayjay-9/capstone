@@ -21,11 +21,9 @@
             <p>{{ commentary|linebreaksbr }}</p>
         {% endif %}
     {% endif %}
-
-    <h3>Run another experiment</h3>
-    <form action="{% url 'run_experiment' experiment.id %}" method="post">
+    <form id="run-experiment-form" action="{% url 'run_experiment' experiment.id %}" method="post">
         {% csrf_token %}
-        <label for="target-column">Column to predict:</label>
+        <label for="target-column"><strong>Column to predict:</strong></label>
         <select name="target_column" id="target-column">
             {% for column in experiment.columns %}
                 <option value="{{ column }}">{{ column }}</option>

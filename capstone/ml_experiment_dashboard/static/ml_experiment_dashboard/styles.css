@@ -1,10 +1,31 @@
+.body {
+    font-family: Arial, sans-serif;
+    margin: 0 5%;
+}
+
+#upload-form, #upload-message, #masthead {
+    text-align: center;
+}
+
+#masthead-links {
+    display: flex;
+    justify-content: right;
+    font-size:1.2rem;
+    gap: 1rem;
+    margin: 2rem 0;
+
+}
+
 .drop-zone {
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 120px;
+    height: 200px;
+    max-width: 40%;
+    min-width: 250px;
+    box-sizing: border-box;
     padding: 1.5rem;
-    margin-bottom: 1rem;
+    margin: 0 auto 1rem auto;
     border: 2px dashed #aaaaaa;
     border-radius: 8px;
     color: #555555;
@@ -25,4 +46,20 @@
 
 .hidden {
     display: none;
+}
+
+#run-experiment-btn {
+    margin-top: 1rem;
+}
+
+#experiment-history-list {
+    list-style-type: none;
+    padding: 0;
+}
+
+#experiment-history-item {
+    border: 1px solid #ddd;
+    padding: 1rem;
+    border-radius: 5px;
+    margin-top: 2rem;
 }
