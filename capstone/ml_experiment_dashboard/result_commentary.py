@@ -38,7 +38,7 @@ def generate_result_commentary(result_data):
     )
 
     model = ChatGoogleGenerativeAI(
-        model="gemini-3.6-flash",
+        model="gemini-3.8-flash",
         google_api_key=settings.GOOGLE_API_KEY,
     )
     response = model.invoke(prompt)
