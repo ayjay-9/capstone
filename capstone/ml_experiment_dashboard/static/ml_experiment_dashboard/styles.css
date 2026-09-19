@@ -21,7 +21,7 @@
     align-items: center;
     justify-content: center;
     height: 200px;
-    max-width: 40%;
+    max-width: 60%;
     min-width: 250px;
     box-sizing: border-box;
     padding: 1.5rem;
@@ -78,4 +78,25 @@
     padding: 1rem;
     border-radius: 5px;
     margin-top: 2rem;
+}
+
+@media (max-width: 767px) {
+    #masthead {
+        font-size: 1.2rem;
+    }
+
+    #masthead-links {
+        display: flex;
+        justify-content: center;
+        font-size: 0.8rem;
+        margin: 0 0;
+    }
+
+    .drop-zone {
+        max-width: 80%;
+    }
+
+    #dataset-commentary, #result-commentary {
+        width: 90%;
+    }
 }
