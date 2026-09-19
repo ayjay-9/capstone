@@ -1,4 +1,5 @@
 {% extends "ml_experiment_dashboard/layout.html" %}
+{% load static %}
 
 {% block body %}
     <h2>Upload History</h2>
@@ -8,7 +9,11 @@
             <li id="experiment-history-item">
                 <strong>{{ experiment.name }}</strong> &mdash; {{ experiment.created_at }}
                 <p>{{ experiment.row_count }} rows &middot; columns: {{ experiment.columns|join:", " }}</p>
-                <p>{{ experiment.commentary }}</p>
+                <br>
+                <p>
+                    <img src="{% static 'ml_experiment_dashboard/gemini-color.jpg' %}" alt="Gemini AI Icon" class="ai-icon">
+                    {{ experiment.commentary }}
+                </p>
             </li>
         {% endfor %}
         </ul>

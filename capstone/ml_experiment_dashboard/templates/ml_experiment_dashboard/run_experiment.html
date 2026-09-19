@@ -1,4 +1,5 @@
 {% extends "ml_experiment_dashboard/layout.html" %}
+{% load static %}
 
 {% block body %}
     <h1>Run Experiment</h1>
@@ -17,8 +18,15 @@
         <p><strong>Features used:</strong> {{ result.feature_columns|join:", " }}</p>
         <p><strong>{{ result.metric_name }}:</strong> {{ result.metric_value }}</p>
         {% if commentary %}
-            <h3>AI Commentary</h3>
-            <p>{{ commentary|linebreaksbr }}</p>
+            <div id="result-commentary">
+                <h3>AI Commentary</h3>
+                <hr>
+                <p>
+                    <img src="{% static 'ml_experiment_dashboard/gemini-color.jpg' %}" alt="Gemini AI Icon" class="ai-icon">
+                    {{ commentary|linebreaksbr }}
+                </p>
+            </div>
+            <br>
         {% endif %}
     {% endif %}
     <form id="run-experiment-form" action="{% url 'run_experiment' experiment.id %}" method="post">

@@ -1,4 +1,5 @@
 {% extends "ml_experiment_dashboard/layout.html" %}
+{% load static %}
 
 {% block body %}
     {% if user.is_authenticated %}
@@ -19,10 +20,16 @@
             <p><strong>Name:</strong> {{ experiment.name }}</p>
             <p><strong>Row Count:</strong> {{ experiment.row_count }}</p>
             {% if experiment.commentary %}
-                <h4>AI Commentary</h4>
-                <!--Show/Hide the commentary-->
-                <button id="toggle-commentary">Show</button>
-                <p id="commentary-content" class="hidden">{{ experiment.commentary|linebreaksbr }}</p>
+                <div id="dataset-commentary">
+                    <h4>AI Commentary</h4>
+                    <hr>
+                    <!--Show/Hide the commentary-->
+                    <button id="toggle-commentary">Show</button>
+                    <p id="commentary-content" class="hidden">
+                        <img src="{% static 'ml_experiment_dashboard/gemini-color.jpg' %}" alt="Gemini AI Icon" class="ai-icon">
+                        {{ experiment.commentary|linebreaksbr }}
+                    </p>
+                </div>
             {% endif %}
             <h4>Preview of First 5 Rows</h4>
             <div class="table-responsive">

@@ -52,6 +52,22 @@
     margin-top: 1rem;
 }
 
+.ai-icon {
+    width: 20px;
+    height: 20px;
+}
+
+/* Yellow glow */
+#dataset-commentary, #result-commentary {
+    width: 65%;
+    margin: 2rem auto;
+    padding: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #fff8dc; /* Light yellow background */
+    box-shadow: 0 0 10px rgba(255, 255, 0, 0.5); /* Yellow glow */
+}
+
 #experiment-history-list {
     list-style-type: none;
     padding: 0;
