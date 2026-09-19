@@ -59,7 +59,7 @@ def generate_dataset_commentary(df):
     )
 
     model = ChatGoogleGenerativeAI(
-        model="gemini-3.8-flash",
+        model="gemini-3.7-flash",
         google_api_key=settings.GOOGLE_API_KEY,
     )
     response = model.invoke(prompt)
