@@ -22,6 +22,7 @@ class Experiment(models.Model):
 class ExperimentResult(models.Model):
     experiment = models.ForeignKey(Experiment, on_delete=models.CASCADE)
     result_data = models.JSONField()
+    commentary = models.TextField(default="")
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
