@@ -45,11 +45,11 @@ def index(request):
                     "message": "The uploaded CSV file must contain at least 5 rows of data."
                 })
 
-            try:
-                commentary = generate_dataset_commentary(df)
-            except Exception as e:
-                print(f"generate_dataset_commentary failed: {e!r}")
-                commentary = "Commentary unavailable."
+            # try:
+            #     commentary = generate_dataset_commentary(df)
+            # except Exception as e:
+            #     print(f"generate_dataset_commentary failed: {e!r}")
+            #     commentary = "Commentary unavailable."
 
             # Create the Experiment model
             experiment = Experiment(
@@ -59,11 +59,11 @@ def index(request):
                 columns=df.columns.tolist(),
                 row_count=len(df),
                 preview_rows=json.loads(df.head().to_json(orient="records")),
-                commentary=commentary,
+                # commentary=commentary,
             )
             experiment.save()
-
-            cache.set(f"dataset_{request.session.session_key}", df.to_json(orient="records"), timeout=600) # Cache the dataset for 10 minutes
+            # Cache the dataset for 10 minutes to allow the user to run experiments without re-uploading the dataset.
+            cache.set(f"dataset_{request.session.session_key}", df.to_json(orient="records"), timeout=600) 
 
             return render(request, "ml_experiment_dashboard/index.html", {
                 "message": f"Successfully uploaded {uploaded_file.name}.",
@@ -128,18 +128,18 @@ def run_experiment(request, experiment_id):
             "message": "Could not run an experiment with that column. Please choose a different target column.",
         })
 
-    try:
-        commentary = generate_result_commentary(result_data)
-    except Exception as e:
-        print(f"generate_result_commentary failed: {e!r}")
-        commentary = "Commentary unavailable."
+    # try:
+    #     commentary = generate_result_commentary(result_data)
+    # except Exception as e:
+    #     print(f"generate_result_commentary failed: {e!r}")
+    #     commentary = "Commentary unavailable."
 
     ExperimentResult.objects.create(experiment=experiment, result_data=result_data)
 
     return render(request, "ml_experiment_dashboard/run_experiment.html", {
         "experiment": experiment,
         "result": result_data,
-        "commentary": commentary,
+        # "commentary": commentary,
     })
 
 def register(request):
