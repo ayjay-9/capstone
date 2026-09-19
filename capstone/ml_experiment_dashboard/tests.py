@@ -244,9 +244,11 @@ class RunExperimentViewTests(TestCase):
         response = self.client.get(reverse("run_experiment", args=[experiment.id]))
         self.assertEqual(response.status_code, 404)
 
+    @patch("ml_experiment_dashboard.views.generate_result_commentary")
     @patch("ml_experiment_dashboard.views.generate_dataset_commentary")
-    def test_run_experiment_post_runs_regression(self, mock_commentary):
+    def test_run_experiment_post_runs_regression(self, mock_commentary, mock_result_commentary):
         mock_commentary.return_value = "Test commentary."
+        mock_result_commentary.return_value = "Test result commentary."
         user = User.objects.create_user(username="karl", password="testpass123")
         self.client.force_login(user)
         CSV_PATH = os.path.join(os.path.dirname(__file__), "test_files/valid_dataset.csv")
@@ -268,9 +270,11 @@ class RunExperimentViewTests(TestCase):
         self.assertEqual(result.result_data["problem_type"], "regression")
         self.assertEqual(result.result_data["feature_columns"], ["ram"])
 
+    @patch("ml_experiment_dashboard.views.generate_result_commentary")
     @patch("ml_experiment_dashboard.views.generate_dataset_commentary")
-    def test_run_experiment_post_runs_classification(self, mock_commentary):
+    def test_run_experiment_post_runs_classification(self, mock_commentary, mock_result_commentary):
         mock_commentary.return_value = "Test commentary."
+        mock_result_commentary.return_value = "Test result commentary."
         user = User.objects.create_user(username="lena", password="testpass123")
         self.client.force_login(user)
         CSV_PATH = os.path.join(os.path.dirname(__file__), "test_files/valid_dataset.csv")
@@ -325,3 +329,26 @@ class RunExperimentViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Could not run an experiment with that column.")
         self.assertFalse(ExperimentResult.objects.filter(experiment=experiment).exists())
+
+    @patch("ml_experiment_dashboard.views.generate_result_commentary")
+    @patch("ml_experiment_dashboard.views.generate_dataset_commentary")
+    def test_run_experiment_commentary_is_generated(self, mock_commentary, mock_result_commentary):
+        mock_commentary.return_value = "Test commentary."
+        mock_result_commentary.return_value = "Test result commentary."
+        user = User.objects.create_user(username="oliver", password="testpass123")
+        self.client.force_login(user)
+        CSV_PATH = os.path.join(os.path.dirname(__file__), "test_files/valid_dataset.csv")
+        with open(CSV_PATH, "rb") as csv_file:
+            self.client.post(reverse("index"), {"dataset": csv_file}, format="multipart")
+        experiment = Experiment.objects.get(user=user, name="valid_dataset.csv")
+
+        mock_commentary.assert_called_once()
+        self.assertEqual(experiment.commentary, "Test commentary.")
+
+        response = self.client.post(
+            reverse("run_experiment", args=[experiment.id]),
+            {"target_column": "price"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Experiment Results for valid_dataset.csv")
