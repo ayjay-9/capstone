@@ -16,6 +16,10 @@
         <p><strong>Target column:</strong> {{ result.target_column }}</p>
         <p><strong>Features used:</strong> {{ result.feature_columns|join:", " }}</p>
         <p><strong>{{ result.metric_name }}:</strong> {{ result.metric_value }}</p>
+        {% if commentary %}
+            <h3>AI Commentary</h3>
+            <p>{{ commentary|linebreaksbr }}</p>
+        {% endif %}
     {% endif %}
 
     <h3>Run another experiment</h3>

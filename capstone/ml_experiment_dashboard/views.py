@@ -14,6 +14,7 @@ from django.db import IntegrityError
 
 from .models import User, Experiment, ExperimentResult
 from .dataset_commentary import generate_dataset_commentary
+from .result_commentary import generate_result_commentary
 from .model_training import train_model
 
 def index(request):
@@ -127,11 +128,18 @@ def run_experiment(request, experiment_id):
             "message": "Could not run an experiment with that column. Please choose a different target column.",
         })
 
+    try:
+        commentary = generate_result_commentary(result_data)
+    except Exception as e:
+        print(f"generate_result_commentary failed: {e!r}")
+        commentary = "Commentary unavailable."
+
     ExperimentResult.objects.create(experiment=experiment, result_data=result_data)
 
     return render(request, "ml_experiment_dashboard/run_experiment.html", {
         "experiment": experiment,
         "result": result_data,
+        "commentary": commentary,
     })
 
 def register(request):
