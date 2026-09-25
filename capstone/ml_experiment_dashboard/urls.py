@@ -8,4 +8,5 @@ urlpatterns = [
     path('', views.index, name='index'),
     path('history/', views.history, name='history'),
     path('experiment/<int:experiment_id>/', views.run_experiment, name='run_experiment'),
+    path('experiment/<int:experiment_id>/rename/', views.rename_experiment, name='rename_experiment'),
 ]

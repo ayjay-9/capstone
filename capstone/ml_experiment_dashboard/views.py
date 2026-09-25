@@ -4,7 +4,7 @@ import pandas as pd
 from pathlib import PurePosixPath as UploadPath
 from django.core.cache import cache
 from django.core.paginator import Paginator
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 from django.contrib.auth import authenticate, login as django_login, logout as django_logout
@@ -77,6 +77,7 @@ def index(request):
 def serialize_history(experiments):
     return [
         {
+            "id": experiment.id, # rename experiment would need the ID to identify the experiment
             "name": experiment.name,
             "description": experiment.description,
             "columns": experiment.columns,
@@ -98,6 +99,28 @@ def history(request):
         "page_obj": page_obj,
         "experiments": serialize_history(page_obj.object_list),
     })
+
+@login_required
+def rename_experiment(request, experiment_id):
+    if request.method != "POST":
+        return JsonResponse({"error": "POST required."}, status=405)
+
+    experiment = get_object_or_404(Experiment, id=experiment_id, user=request.user)
+
+    try:
+        payload = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid request body."}, status=400)
+
+    new_name = payload.get("name", "").strip()
+    if not new_name:
+        return JsonResponse({"error": "Name cannot be empty."}, status=400)
+    if len(new_name) > 100:
+        return JsonResponse({"error": "Name must be 100 characters or fewer."}, status=400)
+
+    experiment.name = new_name
+    experiment.save()
+    return JsonResponse({"name": experiment.name})
 
 @login_required
 def run_experiment(request, experiment_id):

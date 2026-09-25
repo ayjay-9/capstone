@@ -92,11 +92,10 @@ function ExperimentName({ experimentId, initialName }) {
     );
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-    document.querySelectorAll(".experiment-name-root").forEach((el) => {
-        const { experimentId, experimentName } = el.dataset;
-        ReactDOM.createRoot(el).render(
-            <ExperimentName experimentId={experimentId} initialName={experimentName} />
-        );
-    });
+// No DOMContentLoaded listener: Babel-standalone already waits for it before running this script, so one here would never fire.
+document.querySelectorAll(".experiment-name-root").forEach((el) => {
+    const { experimentId, experimentName } = el.dataset;
+    ReactDOM.createRoot(el).render(
+        <ExperimentName experimentId={experimentId} initialName={experimentName} />
+    );
 });

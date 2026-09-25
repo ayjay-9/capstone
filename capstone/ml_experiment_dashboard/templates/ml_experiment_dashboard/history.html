@@ -7,7 +7,7 @@
         <ul id="experiment-history-list">
         {% for experiment in experiments %}
             <li id="experiment-history-item">
-                <strong>{{ experiment.name }}</strong> &mdash; {{ experiment.created_at }}
+                <span class="experiment-name-root" data-experiment-id="{{ experiment.id }}" data-experiment-name="{{ experiment.name }}"></span> &mdash; {{ experiment.created_at }}
                 <p>{{ experiment.row_count }} rows &middot; columns: {{ experiment.columns|join:", " }}</p>
                 <br>
                 <p>
@@ -43,4 +43,5 @@
     {% else %}
         <p>You haven't uploaded any datasets yet.</p>
     {% endif %}
+    <script type="text/babel" src="{% static 'ml_experiment_dashboard/history.js' %}"></script>
 {% endblock %}
