@@ -1,3 +1,4 @@
+import json
 import os
 from unittest.mock import patch
 from django.contrib.auth import get_user_model
@@ -205,6 +206,82 @@ class HistoryViewTests(TestCase):
         self.assertEqual(response_page_2.status_code, 200)
         for i in range(2, 7):
             self.assertContains(response_page_2, f"dataset_{i}.csv")
+
+class RenameExperimentViewTests(TestCase):
+    def test_rename_requires_login(self):
+        response = self.client.post(reverse("rename_experiment", args=[1]))
+        self.assertEqual(response.status_code, 302)
+
+    def test_get_is_not_allowed(self):
+        user = User.objects.create_user(username="pat", password="testpass123")
+        self.client.force_login(user)
+        experiment = Experiment.objects.create(user=user, name="original.csv", row_count=5)
+
+        response = self.client.get(reverse("rename_experiment", args=[experiment.id]))
+        self.assertEqual(response.status_code, 405)
+
+    def test_rename_own_experiment_succeeds(self):
+        user = User.objects.create_user(username="quinn", password="testpass123")
+        self.client.force_login(user)
+        experiment = Experiment.objects.create(user=user, name="original.csv", row_count=5)
+
+        response = self.client.post(
+            reverse("rename_experiment", args=[experiment.id]),
+            data=json.dumps({"name": "renamed.csv"}),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {"name": "renamed.csv"})
+        experiment.refresh_from_db()
+        self.assertEqual(experiment.name, "renamed.csv")
+
+    def test_rename_another_users_experiment_returns_404(self):
+        owner = User.objects.create_user(username="owner3", password="testpass123")
+        intruder = User.objects.create_user(username="intruder2", password="testpass123")
+        experiment = Experiment.objects.create(user=owner, name="not_yours.csv", row_count=5)
+
+        self.client.force_login(intruder)
+        response = self.client.post(
+            reverse("rename_experiment", args=[experiment.id]),
+            data=json.dumps({"name": "hacked.csv"}),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 404)
+        experiment.refresh_from_db()
+        self.assertEqual(experiment.name, "not_yours.csv")
+
+    def test_rename_with_empty_name_is_rejected(self):
+        user = User.objects.create_user(username="riley", password="testpass123")
+        self.client.force_login(user)
+        experiment = Experiment.objects.create(user=user, name="original.csv", row_count=5)
+
+        response = self.client.post(
+            reverse("rename_experiment", args=[experiment.id]),
+            data=json.dumps({"name": "   "}),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+        experiment.refresh_from_db()
+        self.assertEqual(experiment.name, "original.csv")
+
+    def test_rename_with_name_over_100_chars_is_rejected(self):
+        user = User.objects.create_user(username="sam", password="testpass123")
+        self.client.force_login(user)
+        experiment = Experiment.objects.create(user=user, name="original.csv", row_count=5)
+
+        response = self.client.post(
+            reverse("rename_experiment", args=[experiment.id]),
+            data=json.dumps({"name": "x" * 101}),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+        experiment.refresh_from_db()
+        self.assertEqual(experiment.name, "original.csv")
+
 
 class RunExperimentViewTests(TestCase):
     def test_run_experiment_requires_login(self):
