@@ -80,6 +80,26 @@
     margin-top: 2rem;
 }
 
+.rename-link {
+    border: none;
+    background: none;
+    color: #007bff;
+    font-size: 0.85rem;
+    cursor: pointer;
+    padding: 0;
+}
+
+.rename-editor input {
+    margin-right: 0.5rem;
+}
+
+.rename-error {
+    display: block;
+    color: #c0392b;
+    font-size: 0.85rem;
+    margin-top: 0.25rem;
+}
+
 @media (max-width: 767px) {
     #masthead {
         font-size: 1.2rem;
