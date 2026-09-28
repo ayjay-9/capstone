@@ -11,7 +11,7 @@
             {% csrf_token %}
             <label for="dataset" class="drop-zone" id="drop-zone">
                 <span id="drop-zone-text">Drag &amp; drop a CSV here, or click to browse</span>
-                <input type="file" name="dataset" id="dataset" accept=".csv" class="drop-zone-input">
+                <input type="file" name="dataset" id="dataset" accept=".csv" class="drop-zone-input" required>
             </label>
             <input type="submit" id="upload-data-set" value="Upload">
         </form>

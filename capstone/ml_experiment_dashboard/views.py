@@ -19,7 +19,11 @@ from .model_training import train_model
 
 def index(request):
     if request.method == "POST":
-            uploaded_file = request.FILES["dataset"]
+            if request.FILES.get("dataset") is None:
+                return render(request, "ml_experiment_dashboard/index.html", {
+                    "message": "No file uploaded. Please upload a CSV file."
+                })
+            uploaded_file = request.FILES.get("dataset")
             if not UploadPath(uploaded_file.name).suffix == ".csv":
                 return render(request, "ml_experiment_dashboard/index.html", {
                     "message": "Please upload a CSV file."
