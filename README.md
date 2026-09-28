@@ -66,13 +66,18 @@ rather than silently failing.
 Beyond those three areas, the app also uses Django's pagination framework
 for upload history, a login-required section distinct from the public
 login/register pages, a custom `AbstractUser`-based user model, three
-migrations evolving the schema as the feature set grew, a `JSONField`-backed
-`ExperimentResult` model designed to flexibly hold whatever shape of metrics
-a given model type produces, and hand-rolled vanilla JavaScript (no
-framework) for drag-and-drop file upload and a commentary show/hide toggle.
-The test suite has 26 tests covering registration, authentication, upload
-validation, dataset persistence, paginated history (including per-user
-isolation, so one user can never see another's uploads), and the full
+migrations evolving the schema as the feature set grew, and a
+`JSONField`-backed `ExperimentResult` model designed to flexibly hold
+whatever shape of metrics a given model type produces. The frontend mixes
+two approaches deliberately: hand-rolled vanilla JavaScript
+(`scripts.js`) for drag-and-drop file upload and a commentary show/hide
+toggle, and React (`history.js`, loaded from a CDN and transpiled in-browser
+with Babel standalone — no build step or `npm`) for the in-place experiment
+rename control on the history page, which calls a small JSON endpoint
+(`rename_experiment`) to persist the new name. The test suite has 32 tests
+covering registration, authentication, upload validation, dataset
+persistence, paginated history (including per-user isolation, so one user
+can never see another's uploads), renaming an experiment, and the full
 train-and-evaluate flow for both regression and classification.
 
 ## What's in each file
@@ -89,10 +94,13 @@ train-and-evaluate flow for both regression and classification.
 - **`capstone/ml_experiment_dashboard/views.py`** — `index` (upload and
   validate a CSV, generate its AI commentary, cache the full dataset,
   display it); `history` (paginated, per-user list of past uploads);
-  `run_experiment` (GET shows a target-column picker with no side effects;
-  POST trains a model on the cached dataset and shows the results plus an AI
-  explanation); `register`, `login`, `logout`.
-- **`capstone/ml_experiment_dashboard/urls.py`** — the app's routes.
+  `rename_experiment` (JSON endpoint; validates and persists a new name for
+  one of the current user's experiments); `run_experiment` (GET shows a
+  target-column picker with no side effects; POST trains a model on the
+  cached dataset and shows the results plus an AI explanation); `register`,
+  `login`, `logout`.
+- **`capstone/ml_experiment_dashboard/urls.py`** — the app's routes,
+  including `experiment/<id>/rename/` for the history-page rename feature.
 - **`capstone/ml_experiment_dashboard/dataset_commentary.py`** —
   `generate_dataset_commentary(df)`: computes real facts about the uploaded
   dataset and asks Gemini to summarize it and suggest a likely prediction
@@ -116,10 +124,13 @@ train-and-evaluate flow for both regression and classification.
   (target-column picker and training results), `login.html`, `register.html`.
 - **`capstone/ml_experiment_dashboard/static/ml_experiment_dashboard/`** —
   `scripts.js` (drag-and-drop upload handling, AI-commentary show/hide
-  toggle), `styles.css`.
+  toggle), `history.js` (a small React component, transpiled in-browser via
+  Babel standalone, that turns each history entry's name into an in-place
+  editor calling the rename endpoint), `styles.css`, `gemini-color.jpg` (icon
+  shown next to AI-generated commentary).
 - **`capstone/ml_experiment_dashboard/test_files/`** — small CSV/TXT
   fixtures used only by the automated test suite.
-- **`capstone/ml_experiment_dashboard/tests.py`** — 26 tests covering every
+- **`capstone/ml_experiment_dashboard/tests.py`** — 32 tests covering every
   view and the full upload-to-training flow.
 - **`requirements.txt`** — Python dependencies: `pandas`, `langchain`,
   `langchain-google-genai`, `python-dotenv`, `scikit-learn`.
@@ -143,7 +154,7 @@ train-and-evaluate flow for both regression and classification.
    file with a header row and at least 5 rows of data to try it out.
 
 To run the automated test suite (from the same directory):
-`python manage.py test`. All 26 tests run without any API key or network
+`python manage.py test`. All 32 tests run without any API key or network
 access, since the Gemini calls are mocked in tests that don't need to
 exercise them.
 
